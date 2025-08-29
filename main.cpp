@@ -35,6 +35,8 @@ void sendError(string type);
 
 string lower(string ori_str);
 
+string ucfirst(const string& ori_str);
+
 string getRandomizeCard();
 
 void decideCards();
@@ -65,7 +67,7 @@ void displayCards(){
 	cout << "Kartu yang anda miliki : " << endl;
 	int i;
 	for(i = 0; i < player_cards.size(); i++){
-		cout << i + 1 << ". " << player_cards[i] << endl;
+		cout << i + 1 << ". " << getDisplayName(player_cards[i]) << " [" << player_cards[i] << "]" << endl;
 	}
 }
 
@@ -131,7 +133,6 @@ bool isAllowedCard(string card_id){
 void sendError(string type){
 	if(type == "invalid-cards"){
 		cout << "Kartu/aksi yang anda masukkan salah!" << endl << endl;
-		displayCards();
 	} else if(type == "unable"){
 		cout << "Kartu tidak bisa digunakan!" << endl << endl;
 	}
@@ -145,6 +146,13 @@ string lower(string ori_str){
 	return str;
 }
 
+string ucfirst(const string& ori_str){
+	string modif_str = ori_str;
+	if(modif_str.length() > 0){
+		modif_str[0] = toupper(modif_str[0]);
+	}
+	return modif_str;
+}
 
 string getRandomizeCard(){
 	int result = rand() % 108 + 1;
@@ -238,13 +246,12 @@ string chooseColor(){
 }
 
 void cardUse(string p, string card_id){
-	cout << card_id << endl;
 	string action = getCardAction(card_id);
 	if(action == "+2")stacks += 2;
 	if(card_id == "+4")stacks += 4;
 	if(p == "player"){
 		if(player_cards.size() == 1)cout << "Anda: UNO!" << endl;
-		cout << "Anda menggunakan kartu " << card_id << endl << endl;
+		cout << "Anda menggunakan kartu " << getDisplayName(card_id) << endl << endl;
 		if(player_cards.size() == 0){
 			cout << "Anda: UNO Game!" << endl;
 			win(p);
@@ -252,7 +259,7 @@ void cardUse(string p, string card_id){
 		}
 		if(action == "skip" || action == "reverse"){
 			displayCards();
-			cout << "Kartu saat ini : " << current_card << endl;
+			cout << "Kartu saat ini : " << getDisplayName(current_card) << endl;
 			cout << "Masukkan id kartu atau ambil: ";
 			sendActionInput();
 			return;
@@ -263,12 +270,12 @@ void cardUse(string p, string card_id){
 		}
 		processOpponent();
 		displayCards();
-		cout << "Kartu saat ini : " << current_card << endl;
+		cout << "Kartu saat ini : " << getDisplayName(current_card) << endl;
 		cout << "Masukkan id kartu atau ambil: ";
 		sendActionInput();
 	} else {
 		if(bot_cards.size() == 1)cout <<  "Bot: UNO!" << endl;
-		cout << "Bot menggunakan kartu " << card_id << endl << endl;
+		cout << "Bot menggunakan kartu " << getDisplayName(card_id) << endl << endl;
 		if(bot_cards.size() == 0){
 			cout << "Bot: UNO Game!" << endl;
 			win(p);
@@ -277,6 +284,10 @@ void cardUse(string p, string card_id){
 		if(action == "skip" || action == "block"){
 			processOpponent();
 			return;
+		}
+		if(card_id == "color_change"){
+			string color = chooseColor();
+			current_card = card_id + "_" + uno_colors[rand() % 3];
 		}
 	}
 }
@@ -288,7 +299,8 @@ void sendActionInput(){
 	if(find(player_cards.begin(), player_cards.end(), action) != player_cards.end()){
 		if(!isAllowedCard(action)){
 			sendError("unable");
-			cout << "Kartu saat ini : " << current_card << endl;
+			displayCards();
+			cout << "Kartu saat ini : " << getDisplayName(current_card) << endl;
 			cout << "Masukkan id kartu atau ambil: ";
 			sendActionInput();
 			return;
@@ -303,24 +315,27 @@ void sendActionInput(){
 			for(int i = 1; i <= stacks; i++){
 				card = getRandomizeCard();
 				takeCard("player", card);
-				cout << "Anda mengambil kartu dan mendapatkan " << card << endl;
+				cout << "Anda mengambil kartu dan mendapatkan " << getDisplayName(card) << endl;
 			}
 			stacks = 0;
 			cout << endl;
 			processOpponent();
+			displayCards();
 			cout << "Kartu saat ini : " << current_card << endl;
 			cout << "Masukkan id kartu atau ambil: ";
 			sendActionInput();
 			return;
 		}
-		cout << "Anda mengambil kartu dan mendapatkan " << card << endl << endl;
+		cout << "Anda mengambil kartu dan mendapatkan " << getDisplayName(card) << endl << endl;
 		processOpponent();
-		cout << "Kartu saat ini : " << current_card << endl;
+		displayCards();
+		cout << "Kartu saat ini : " << getDisplayName(current_card) << endl;
 		cout << "Masukkan id kartu atau ambil: ";
 		sendActionInput();
 	} else {
 		sendError("invalid-cards");
-		cout << "Kartu saat ini : " << current_card << endl;
+		displayCards();
+		cout << "Kartu saat ini : " << getDisplayName(current_card) << endl;
 		cout << "Masukkan id kartu atau ambil: ";
 		sendActionInput();
 	}
@@ -344,7 +359,7 @@ void input(){
 	string input_card;
 	cout << "Anda jalan pertama!" << endl;
 	cout << "Anda bisa menggunakan kata 'ambil' untuk mengambil kartu" << endl;
-	cout << "Kartu saat ini : " << current_card << endl;
+	cout << "Kartu saat ini : " << getDisplayName(current_card) << endl;
 	cout << "Masukkan id kartu atau ambil: ";
 	sendActionInput();
 }
@@ -361,5 +376,17 @@ int main(){
 }
 
 string getDisplayName(string card_string){
-	
+	for(int i = 0; i < 4; i++){
+		if(card_string.length() < strlen(uno_colors[i]))continue;
+		if(card_string.substr(0, strlen(uno_colors[i])) == uno_colors[i]){
+			return ucfirst(uno_colors[i]) + " " + ucfirst(card_string.substr(strlen(uno_colors[i]) + 1, card_string.length()));
+		}
+	}
+	if(card_string.substr(0, 12) == "color_change"){
+		if(card_string.length() >= 13){
+			return "Color Change - " + card_string.substr(13);
+		}
+		return "Color Change";
+	}
+	return card_string;
 }
