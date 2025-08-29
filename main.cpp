@@ -173,7 +173,7 @@ void decideCards(){
 	int i;
 	player_cards.clear();
 	bot_cards.clear();
-	for(i = 0; i <= 8; i++){
+	for(i = 1; i <= 7; i++){
 		player_cards.push_back(getRandomizeCard());
 		bot_cards.push_back(getRandomizeCard());
 	}
@@ -281,7 +281,7 @@ void cardUse(string p, string card_id){
 			win(p);
 			return;
 		}
-		if(action == "skip" || action == "block"){
+		if(action == "skip" || action == "reverse"){
 			processOpponent();
 			return;
 		}
@@ -343,6 +343,9 @@ void sendActionInput(){
 
 void startGame(){
 	current_card = "";
+	stacks = 0;
+	player_cards.clear();
+	bot_cards.clear();
 	decideCards();
 	current_card = getRandomizeCard();
 	
@@ -350,6 +353,7 @@ void startGame(){
 
 void input(){
 	string uno;
+	cout << ">> ";
 	cin >> uno;
 	if(lower(uno) != "uno"){
 		input();
