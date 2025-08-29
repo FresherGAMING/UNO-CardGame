@@ -21,6 +21,42 @@ int stacks = 0;
 
 bool stacks_active;
 
+void displayCards();
+
+string getCardColor(string card_id);
+
+string getCardAction(string card_id);
+
+string getCardNumber(string card_id);
+
+bool isAllowedCard(string card_id);
+
+void sendError(string type);
+
+string lower(string ori_str);
+
+string getRandomizeCard();
+
+void decideCards();
+
+void takeCard(string p, string card);
+
+void win(string p);
+
+void processOpponent();
+
+void removeCard(string card_id);
+
+void cardUse(string p, string card_id);
+
+void sendActionInput();
+
+void startGame();
+
+void input();
+
+string getDisplayName(string card_string);
+
 void init(){
 	srand(time(NULL));
 }
@@ -34,7 +70,8 @@ void displayCards(){
 }
 
 string getCardColor(string card_id){
-	for(int i = 0; i <= 4; i++){
+	for(int i = 0; i < 4; i++){
+		if(card_id.length() < strlen(uno_colors[i]))break;
 		if(card_id.substr(0, strlen(uno_colors[i])) == uno_colors[i]){
 			return uno_colors[i];
 		}
@@ -58,7 +95,7 @@ string getCardAction(string card_id){
 string getCardNumber(string card_id){
 	string color = getCardColor(card_id);
 	if(color != ""){
-		card_id.replace(0, color.size() + 1, "");
+		card_id.replace(0, color.length() + 1, "");
 		if(!card_id.empty()){
 			for(int i = 0; i <= 10; i++){
 				if(uno_cards[i] == card_id){
@@ -71,8 +108,18 @@ string getCardNumber(string card_id){
 }
 
 bool isAllowedCard(string card_id){
-	if(card_id == "+4" || card_id == "color_change")return true;
-	cout << current_card << endl;
+	if(stacks > 0 && getCardAction(card_id) != "+2" && card_id != "+4")return false;
+	if(card_id == "+4")return true;
+	if(stacks > 0 && current_card == "+4" && getCardAction(card_id) == "+2")return true;
+	if(current_card == "+4" && stacks <= 0)return true;
+	if(stacks <= 0 && card_id == "color_change")return true;
+	if(current_card.substr(0, 12) == "color_change"){
+		string c = current_card;
+		c.replace(0, 13, "");
+		if(c == getCardColor(card_id)){
+			return true;
+		}
+	}
 	if(getCardColor(card_id) != "" && getCardColor(current_card) != ""){
 		if(getCardColor(card_id) == getCardColor(current_card))return true;
 		if(getCardNumber(card_id) == getCardNumber(current_card) && getCardNumber(card_id) != "999")return true;
@@ -83,10 +130,10 @@ bool isAllowedCard(string card_id){
 
 void sendError(string type){
 	if(type == "invalid-cards"){
-		cout << endl << "Kartu/aksi yang anda masukkan salah!" << endl;
+		cout << "Kartu/aksi yang anda masukkan salah!" << endl << endl;
 		displayCards();
 	} else if(type == "unable"){
-		cout << endl << "Kartu tidak bisa digunakan!" << endl;
+		cout << "Kartu tidak bisa digunakan!" << endl << endl;
 	}
 }
 
@@ -133,25 +180,104 @@ void takeCard(string p, string card){
 	}
 }
 
+void win(string p){
+	if(p == "bot"){
+		cout << "Bot Menang!" << endl;
+	} else {
+		cout << "Anda Menang!" << endl;
+	}
+	cout << "Apakah Anda ingin bermain lagi ?" << endl;
+	cout << "Ketik UNO untuk bermain lagi" << endl;
+	input();
+}
+
 void processOpponent(){
-	for(int i = 0; i <= bot_cards.size(); i++){
+	for(int i = 0; i < bot_cards.size(); i++){
 		if(isAllowedCard(bot_cards[i])){
 			current_card = bot_cards[i];
 			vector<string>::iterator ite = find(bot_cards.begin(), bot_cards.end(), bot_cards[i]);
 			if(ite != bot_cards.end()){
 				bot_cards.erase(ite);
 			}
+			cardUse("bot", current_card);
 			return;
 		}
 	}
+	if(stacks > 0){
+		cout << "Bot mengambil kartu (x" << stacks << ")" << endl << endl;
+		for(int i = 1; i <= stacks; i++){
+			takeCard("bot", getRandomizeCard());
+		}
+		stacks = 0;
+		return;
+	}
 	takeCard("bot", getRandomizeCard());
+	cout << "Bot mengambil kartu (x1)" << endl << endl;
 	
 }
 
-removeCard(string card_id){
+void removeCard(string card_id){
 	vector<string>::iterator i = find(player_cards.begin(), player_cards.end(), card_id);
 	if(i != player_cards.end()){
 		player_cards.erase(i);
+	}
+}
+
+string chooseColor(){
+	cout << "Silahkan pilih warna [green | blue | red | yellow]: ";
+	string color;
+	cin >> color;
+	color = lower(color);
+	for(int i = 0; i < 4; i++){
+		if(uno_colors[i] == color){
+			return color;
+		}
+	}
+	cout << endl;
+	return chooseColor();
+}
+
+void cardUse(string p, string card_id){
+	cout << card_id << endl;
+	string action = getCardAction(card_id);
+	if(action == "+2")stacks += 2;
+	if(card_id == "+4")stacks += 4;
+	if(p == "player"){
+		if(player_cards.size() == 1)cout << "Anda: UNO!" << endl;
+		cout << "Anda menggunakan kartu " << card_id << endl << endl;
+		if(player_cards.size() == 0){
+			cout << "Anda: UNO Game!" << endl;
+			win(p);
+			return;
+		}
+		if(action == "skip" || action == "reverse"){
+			displayCards();
+			cout << "Kartu saat ini : " << current_card << endl;
+			cout << "Masukkan id kartu atau ambil: ";
+			sendActionInput();
+			return;
+		}
+		if(card_id == "color_change"){
+			string color = chooseColor();
+			current_card = card_id + "_" + color;
+		}
+		processOpponent();
+		displayCards();
+		cout << "Kartu saat ini : " << current_card << endl;
+		cout << "Masukkan id kartu atau ambil: ";
+		sendActionInput();
+	} else {
+		if(bot_cards.size() == 1)cout <<  "Bot: UNO!" << endl;
+		cout << "Bot menggunakan kartu " << card_id << endl << endl;
+		if(bot_cards.size() == 0){
+			cout << "Bot: UNO Game!" << endl;
+			win(p);
+			return;
+		}
+		if(action == "skip" || action == "block"){
+			processOpponent();
+			return;
+		}
 	}
 }
 
@@ -169,15 +295,25 @@ void sendActionInput(){
 		}
 		current_card = action;
 		removeCard(action);
-		processOpponent();
-		cout << "Kartu saat ini : " << current_card << endl;
-		cout << "Masukkan id kartu atau ambil: ";
-		sendActionInput();
-		
+		cardUse("player", action);		
 	} else if(lower(action.substr(0, 5)) == "ambil") {
 		string card = getRandomizeCard();
 		takeCard("player", card);
-		cout << "Anda mengambil kartu dan mendapatkan " << card << endl;
+		if(stacks > 0){
+			for(int i = 1; i <= stacks; i++){
+				card = getRandomizeCard();
+				takeCard("player", card);
+				cout << "Anda mengambil kartu dan mendapatkan " << card << endl;
+			}
+			stacks = 0;
+			cout << endl;
+			processOpponent();
+			cout << "Kartu saat ini : " << current_card << endl;
+			cout << "Masukkan id kartu atau ambil: ";
+			sendActionInput();
+			return;
+		}
+		cout << "Anda mengambil kartu dan mendapatkan " << card << endl << endl;
 		processOpponent();
 		cout << "Kartu saat ini : " << current_card << endl;
 		cout << "Masukkan id kartu atau ambil: ";
