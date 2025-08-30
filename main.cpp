@@ -311,8 +311,7 @@ void sendActionInput(){
 		removeCard(action);
 		cardUse("player", action);		
 	} else if(lower(action.substr(0, 5)) == "ambil") {
-		string card = getRandomizeCard();
-		takeCard("player", card);
+		string card;
 		if(stacks > 0){
 			for(int i = 1; i <= stacks; i++){
 				card = getRandomizeCard();
@@ -328,6 +327,8 @@ void sendActionInput(){
 			sendActionInput();
 			return;
 		}
+		card = getRandomizeCard();
+		takeCard("player", card);
 		cout << "Anda mengambil kartu dan mendapatkan " << getDisplayName(card) << endl << endl;
 		processOpponent();
 		displayCards();
