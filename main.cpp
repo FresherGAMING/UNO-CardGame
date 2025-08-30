@@ -1,3 +1,5 @@
+// UNO CARD GAME PROJECT BASED IN C++
+// Reyhan Janstephen - 535250034
 #include <iostream>
 #include <string>
 #include <cstring>
