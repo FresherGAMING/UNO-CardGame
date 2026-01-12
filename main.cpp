@@ -1,5 +1,4 @@
 // UNO CARD GAME PROJECT BASED IN C++
-// Reyhan Janstephen - 535250034
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -382,7 +381,6 @@ int main(){
 	init();
 	cout << "Selamat datang di permainan UNO berbasis C++" << endl;
 	cout << "Di permainan ini, kalian akan melawan bot yang sudah saya siapkan" << endl;
-	cout << "Author : Reyhan Janstephen (535250034)" << endl;
 	cout << "Silahkan ketik UNO untuk memulai permainan!" << endl;
 	input();
 	return 0;
